@@ -110,7 +110,7 @@
         let USER_ROLE = null;
         let CLIENT_ID = null;
         
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwXpk8NM5GGeD_LO2E6C_Xxp_AyBAdhffo3F5cJNrxP9B0ttyzK3Yhnyw0J4N3plnZK/exec';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw25v4r2yEj_4BkW6RzFQRiGE_h1ZftOuLeFXsJo3ReffWLUn02Tku_57lmhyCvLYzn/exec';
         const isConfigured = SCRIPT_URL !== 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE' && SCRIPT_URL.includes('script.google.com');
         
         const T = {
@@ -1151,186 +1151,75 @@
   }
 
         // Функция генерации PDF
-        async function generatePDF() {
-            const { jsPDF } = window.jspdf;
+       async function generatePDF() {
+            console.log('🚀 Отправка PDF в Telegram...');
             
             try {
-                const pdf = new jsPDF({
-                    orientation: 'portrait',
-                    unit: 'mm',
-                    format: 'a4'
-                });
-
-                // Получаем данные из формы
-                const clientSelect = document.querySelector('select[name="client"]');
-                const clientId = parseInt(clientSelect?.value);
-                const clientName = clientSelect ? clientSelect.options[clientSelect.selectedIndex]?.text : 'Клиент';
-                const dateFrom = document.querySelector('input[name="startDate"]')?.value || '';
-                const dateTo = document.querySelector('input[name="endDate"]')?.value || '';
-
-                console.log('📋 Form data:', { clientId, clientName, dateFrom, dateTo });
-                console.log('📊 State:', { 
-                    hasSales: !!state.sales, 
-                    hasReceipts: !!state.receipts,
-                    salesCount: state.sales?.length,
-                    receiptsCount: state.receipts?.length
-                });
-
-                if (!clientId || isNaN(clientId)) {
-                    alert('Пожалуйста, выберите клиента');
+                // Проверяем наличие сохраненных данных отчета
+                if (!state.reportData) {
+                    alert('❌ Сначала сформируйте акт сверки, нажав кнопку "Сформировать"');
                     return;
                 }
-
-                // Фильтруем данные по клиенту и датам
-                const clientSales = state.sales.filter(s => {
-                    const saleDate = new Date(s.date);
-                    const fromDate = dateFrom ? new Date(dateFrom) : new Date('1900-01-01');
-                    const toDate = dateTo ? new Date(dateTo) : new Date('2100-12-31');
-                    // Устанавливаем время конечной даты на конец дня
-                    toDate.setHours(23, 59, 59, 999);
-                    return s.clientId === clientId && saleDate >= fromDate && saleDate <= toDate;
-                });
-
-                const clientReceipts = state.receipts.filter(r => {
-                    const receiptDate = new Date(r.date);
-                    const fromDate = dateFrom ? new Date(dateFrom) : new Date('1900-01-01');
-                    const toDate = dateTo ? new Date(dateTo) : new Date('2100-12-31');
-                    // Устанавливаем время конечной даты на конец дня
-                    toDate.setHours(23, 59, 59, 999);
-                    return r.clientId === clientId && receiptDate >= fromDate && receiptDate <= toDate;
-                });
-
-                // Вычисляем итоги
-                const totalSales = clientSales.reduce((sum, s) => sum + parseFloat(s.amount || 0), 0);
-                const totalReceipts = clientReceipts.reduce((sum, r) => sum + parseFloat(r.amount || 0), 0);
-                const balance = totalSales - totalReceipts;
-
-                console.log('💰 Totals:', { totalSales, totalReceipts, balance });
-                console.log('📦 Client sales:', clientSales.length);
-                console.log('💵 Client receipts:', clientReceipts.length);
-
-                // Настройки шрифта
-                pdf.setFont('helvetica');
                 
-                let yPos = 20;
-
-                // Заголовок
-                pdf.setFontSize(18);
-                pdf.setFont('helvetica', 'bold');
-                pdf.text('АКТ СВЕРКИ', 105, yPos, { align: 'center' });
-                yPos += 10;
-
-                // Информация о клиенте и периоде
-                pdf.setFontSize(11);
-                pdf.setFont('helvetica', 'normal');
-                pdf.text(`Клиент: ${clientName}`, 20, yPos);
-                yPos += 7;
-                pdf.text(`Период: ${dateFrom || '...'} - ${dateTo || '...'}`, 20, yPos);
-                yPos += 10;
-
-                // Таблица с данными
-                const tableData = [];
-
-                // Добавляем отгрузки
-                clientSales.forEach(sale => {
-                    const productName = state.products?.find(p => p.id === sale.productId)?.name || sale.product || 'Товар';
-                    tableData.push({
-                        date: sale.date,
-                        type: 'Отгрузка',
-                        description: `${sale.docNumber || ''} - ${productName} (${sale.quantity || 0})`,
-                        debit: parseFloat(sale.amount || 0).toLocaleString('ru-RU'),
-                        credit: ''
+                const { clientId, startDate, endDate } = state.reportData;
+                
+                console.log('📋 Sending PDF request:', { clientId, startDate, endDate });
+                
+                // Находим кнопку и показываем индикатор загрузки
+                const btns = document.querySelectorAll('button');
+                let btn = null;
+                btns.forEach(b => {
+                    if (b.textContent.includes('Скачать PDF') || b.textContent.includes('PDF')) {
+                        btn = b;
+                    }
+                });
+                
+                if (btn) {
+                    const originalText = btn.innerHTML;
+                    btn.innerHTML = '⏳ Отправка в Telegram...';
+                    btn.disabled = true;
+                    
+                    // Вызываем API для генерации и отправки PDF
+                    const result = await apiCall('generatePDF', {
+                        clientId: clientId,
+                        startDate: startDate,
+                        endDate: endDate
                     });
-                });
-
-                // Добавляем оплаты
-                clientReceipts.forEach(receipt => {
-                    tableData.push({
-                        date: receipt.date,
-                        type: 'Оплата',
-                        description: `${receipt.docNumber || ''} - ${receipt.paymentType || ''} ${receipt.note ? '(' + receipt.note + ')' : ''}`,
-                        debit: '',
-                        credit: parseFloat(receipt.amount || 0).toLocaleString('ru-RU')
-                    });
-                });
-
-                // Сортируем по дате
-                tableData.sort((a, b) => new Date(a.date) - new Date(b.date));
-
-                // Создаем таблицу
-                pdf.autoTable({
-                    startY: yPos,
-                    head: [['Дата', 'Тип', 'Описание', 'Отгрузка', 'Оплата']],
-                    body: tableData.map(row => [
-                        row.date,
-                        row.type,
-                        row.description,
-                        row.debit,
-                        row.credit
-                    ]),
-                    styles: {
-                        font: 'helvetica',
-                        fontSize: 9,
-                        cellPadding: 3
-                    },
-                    headStyles: {
-                        fillColor: [220, 38, 38],
-                        textColor: 255,
-                        fontStyle: 'bold',
-                        halign: 'center'
-                    },
-                    columnStyles: {
-                        0: { cellWidth: 25 },
-                        1: { cellWidth: 25 },
-                        2: { cellWidth: 70 },
-                        3: { cellWidth: 35, halign: 'right' },
-                        4: { cellWidth: 35, halign: 'right' }
-                    },
-                    margin: { left: 10, right: 10 }
-                });
-
-                // Итоги
-                const finalY = pdf.lastAutoTable.finalY + 10;
-                
-                pdf.setFontSize(11);
-                pdf.setFont('helvetica', 'bold');
-                
-                pdf.text(`Общие отгрузки: ${totalSales.toLocaleString('ru-RU')} сум`, 20, finalY);
-                pdf.text(`Общие оплаты: ${totalReceipts.toLocaleString('ru-RU')} сум`, 20, finalY + 7);
-                
-                // Сальдо с цветом
-                if (balance > 0) {
-                    pdf.setTextColor(220, 38, 38); // красный
-                    pdf.text(`Сальдо (задолженность клиента): ${balance.toLocaleString('ru-RU')} сум`, 20, finalY + 14);
-                } else if (balance < 0) {
-                    pdf.setTextColor(5, 150, 105); // зеленый
-                    pdf.text(`Сальдо (переплата клиента): ${Math.abs(balance).toLocaleString('ru-RU')} сум`, 20, finalY + 14);
+                    
+                    console.log('📥 PDF result:', result);
+                    
+                    // Восстанавливаем кнопку
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                    
+                    if (result.success) {
+                        alert('✅ Акт сверки отправлен в Telegram бот!\n\n' + 
+                              'Проверьте сообщения от бота.');
+                    } else {
+                        alert('❌ Ошибка: ' + (result.error || 'Не удалось отправить PDF.\n\nВозможные причины:\n- У клиента не указан Telegram Chat ID\n- Проблема с подключением к Telegram'));
+                    }
                 } else {
-                    pdf.setTextColor(0, 0, 0);
-                    pdf.text(`Сальдо: 0 сум`, 20, finalY + 14);
+                    // Если кнопка не найдена, просто делаем запрос
+                    const result = await apiCall('generatePDF', {
+                        clientId: clientId,
+                        startDate: startDate,
+                        endDate: endDate
+                    });
+                    
+                    if (result.success) {
+                        alert('✅ Акт сверки отправлен в Telegram бот!');
+                    } else {
+                        alert('❌ Ошибка: ' + (result.error || 'Не удалось отправить PDF'));
+                    }
                 }
-
-                // Дата создания
-                pdf.setTextColor(100, 100, 100);
-                pdf.setFontSize(9);
-                pdf.setFont('helvetica', 'normal');
-                pdf.text(`Создано: ${new Date().toLocaleString('ru-RU')}`, 20, finalY + 25);
-
-                // Имя файла
-                const fileName = `Акт_сверки_${clientName.replace(/\s+/g, '_')}_${dateFrom}_${dateTo}.pdf`;
                 
-                // Сохраняем
-                pdf.save(fileName);
-
             } catch (error) {
-                console.error('Ошибка создания PDF:', error);
-                console.error('Stack:', error.stack);
-                alert(`Ошибка при создании PDF: ${error.message}\n\nПроверьте консоль для деталей.`);
+                console.error('Ошибка отправки PDF:', error);
+                alert(`❌ Ошибка при отправке PDF:\n\n${error.message}\n\nПроверьте консоль браузера для деталей (F12).`);
             }
         }
         
-        window.generatePDF = generatePDF;
-        
+        window.generatePDF = generatePDF;        
     </script>
 </body>
 </html>
