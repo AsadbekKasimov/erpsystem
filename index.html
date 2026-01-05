@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+        <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -579,6 +579,16 @@
                 
                 console.log('✅ Parsed data:', { sales, receipts });
                 
+                // Сохраняем данные отчета в state для генерации PDF
+                state.reportData = {
+                    clientId: parseInt(clientId),
+                    clientName: client.name,
+                    startDate,
+                    endDate,
+                    sales,
+                    receipts
+                };
+                
                 document.getElementById('reportResult').innerHTML = renderReportResult(
                     client.name, startDate, endDate, sales, receipts
                 );
@@ -1151,7 +1161,7 @@
   }
 
         // Функция генерации PDF
-       async function generatePDF() {
+        async function generatePDF() {
             console.log('🚀 Отправка PDF в Telegram...');
             
             try {
@@ -1219,7 +1229,8 @@
             }
         }
         
-        window.generatePDF = generatePDF;        
+        window.generatePDF = generatePDF;
+        
     </script>
 </body>
 </html>
