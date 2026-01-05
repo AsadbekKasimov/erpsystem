@@ -1162,11 +1162,11 @@
                 });
 
                 // Получаем данные из формы
-                const clientSelect = document.querySelector('select[name="clientId"]');
+                const clientSelect = document.querySelector('select[name="client"]');
                 const clientId = parseInt(clientSelect?.value);
                 const clientName = clientSelect ? clientSelect.options[clientSelect.selectedIndex]?.text : 'Клиент';
-                const dateFrom = document.querySelector('input[name="dateFrom"]')?.value || '';
-                const dateTo = document.querySelector('input[name="dateTo"]')?.value || '';
+                const dateFrom = document.querySelector('input[name="startDate"]')?.value || '';
+                const dateTo = document.querySelector('input[name="endDate"]')?.value || '';
 
                 if (!clientId) {
                     alert(t('selectClient'));
