@@ -110,7 +110,7 @@
         let USER_ROLE = null;
         let CLIENT_ID = null;
         
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw8jqUX_GdwmiwgE_IBkOKg1RkvogMDUdV0TObQZbhR0Bhqu5cM5hQF5H3uphz2O905/exec';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzwEqRXjXINv6elpwr1IZHp_RJrqVTJX5ZK0EIdegbNZoD76RqjdUKmcUdTGTXzdpaIHA/exec';
         const isConfigured = SCRIPT_URL !== 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE' && SCRIPT_URL.includes('script.google.com');
         
         const T = {
@@ -1177,19 +1177,19 @@
                 const clientSales = state.sales.filter(s => {
                     const saleDate = new Date(s.date);
                     const fromDate = dateFrom ? new Date(dateFrom) : new Date('1900-01-01');
-                    let toDate = dateTo ? new Date(dateTo) : new Date('2100-12-31');
-                    // Добавляем 1 день к конечной дате, чтобы включить её полностью
-                    toDate.setDate(toDate.getDate() + 1);
-                    return s.clientId === clientId && saleDate >= fromDate && saleDate < toDate;
+                    const toDate = dateTo ? new Date(dateTo) : new Date('2100-12-31');
+                    // Устанавливаем время конечной даты на конец дня
+                    toDate.setHours(23, 59, 59, 999);
+                    return s.clientId === clientId && saleDate >= fromDate && saleDate <= toDate;
                 });
 
                 const clientReceipts = state.receipts.filter(r => {
                     const receiptDate = new Date(r.date);
                     const fromDate = dateFrom ? new Date(dateFrom) : new Date('1900-01-01');
-                    let toDate = dateTo ? new Date(dateTo) : new Date('2100-12-31');
-                    // Добавляем 1 день к конечной дате, чтобы включить её полностью
-                    toDate.setDate(toDate.getDate() + 1);
-                    return r.clientId === clientId && receiptDate >= fromDate && receiptDate < toDate;
+                    const toDate = dateTo ? new Date(dateTo) : new Date('2100-12-31');
+                    // Устанавливаем время конечной даты на конец дня
+                    toDate.setHours(23, 59, 59, 999);
+                    return r.clientId === clientId && receiptDate >= fromDate && receiptDate <= toDate;
                 });
 
                 // Вычисляем итоги
