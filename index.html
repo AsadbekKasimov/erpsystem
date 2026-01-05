@@ -110,7 +110,7 @@
         let USER_ROLE = null;
         let CLIENT_ID = null;
         
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzwEqRXjXINv6elpwr1IZHp_RJrqVTJX5ZK0EIdegbNZoD76RqjdUKmcUdTGTXzdpaIHA/exec';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwXpk8NM5GGeD_LO2E6C_Xxp_AyBAdhffo3F5cJNrxP9B0ttyzK3Yhnyw0J4N3plnZK/exec';
         const isConfigured = SCRIPT_URL !== 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE' && SCRIPT_URL.includes('script.google.com');
         
         const T = {
@@ -1168,8 +1168,16 @@
                 const dateFrom = document.querySelector('input[name="startDate"]')?.value || '';
                 const dateTo = document.querySelector('input[name="endDate"]')?.value || '';
 
-                if (!clientId) {
-                    alert(t('selectClient'));
+                console.log('📋 Form data:', { clientId, clientName, dateFrom, dateTo });
+                console.log('📊 State:', { 
+                    hasSales: !!state.sales, 
+                    hasReceipts: !!state.receipts,
+                    salesCount: state.sales?.length,
+                    receiptsCount: state.receipts?.length
+                });
+
+                if (!clientId || isNaN(clientId)) {
+                    alert('Пожалуйста, выберите клиента');
                     return;
                 }
 
@@ -1193,9 +1201,13 @@
                 });
 
                 // Вычисляем итоги
-                const totalSales = clientSales.reduce((sum, s) => sum + parseFloat(s.amount), 0);
-                const totalReceipts = clientReceipts.reduce((sum, r) => sum + parseFloat(r.amount), 0);
+                const totalSales = clientSales.reduce((sum, s) => sum + parseFloat(s.amount || 0), 0);
+                const totalReceipts = clientReceipts.reduce((sum, r) => sum + parseFloat(r.amount || 0), 0);
                 const balance = totalSales - totalReceipts;
+
+                console.log('💰 Totals:', { totalSales, totalReceipts, balance });
+                console.log('📦 Client sales:', clientSales.length);
+                console.log('💵 Client receipts:', clientReceipts.length);
 
                 // Настройки шрифта
                 pdf.setFont('helvetica');
@@ -1221,12 +1233,12 @@
 
                 // Добавляем отгрузки
                 clientSales.forEach(sale => {
-                    const productName = state.products.find(p => p.id === sale.productId)?.name || '';
+                    const productName = state.products?.find(p => p.id === sale.productId)?.name || sale.product || 'Товар';
                     tableData.push({
                         date: sale.date,
                         type: 'Отгрузка',
-                        description: `${sale.docNumber || ''} - ${productName} (${sale.quantity})`,
-                        debit: parseFloat(sale.amount).toLocaleString('ru-RU'),
+                        description: `${sale.docNumber || ''} - ${productName} (${sale.quantity || 0})`,
+                        debit: parseFloat(sale.amount || 0).toLocaleString('ru-RU'),
                         credit: ''
                     });
                 });
@@ -1236,9 +1248,9 @@
                     tableData.push({
                         date: receipt.date,
                         type: 'Оплата',
-                        description: `${receipt.docNumber || ''} - ${receipt.paymentType} ${receipt.note ? '(' + receipt.note + ')' : ''}`,
+                        description: `${receipt.docNumber || ''} - ${receipt.paymentType || ''} ${receipt.note ? '(' + receipt.note + ')' : ''}`,
                         debit: '',
-                        credit: parseFloat(receipt.amount).toLocaleString('ru-RU')
+                        credit: parseFloat(receipt.amount || 0).toLocaleString('ru-RU')
                     });
                 });
 
@@ -1312,7 +1324,8 @@
 
             } catch (error) {
                 console.error('Ошибка создания PDF:', error);
-                alert('Ошибка при создании PDF. Попробуйте еще раз.');
+                console.error('Stack:', error.stack);
+                alert(`Ошибка при создании PDF: ${error.message}\n\nПроверьте консоль для деталей.`);
             }
         }
         
