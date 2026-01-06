@@ -249,7 +249,8 @@
                 totalShipped: "Jami yetkazish / Jami to'lovlar"
             }
         };
-        
+        let REPORT_DATA = null;
+
         let state = {
             lang: 'ru',
             activeTab: 'dashboard',
@@ -580,14 +581,15 @@
                 console.log('✅ Parsed data:', { sales, receipts });
                 
                 // Сохраняем данные отчета в state для генерации PDF
-                state.reportData = {
-                    clientId: parseInt(clientId),
-                    clientName: client.name,
-                    startDate,
-                    endDate,
-                    sales,
-                    receipts
-                };
+             REPORT_DATA = {
+    clientId: parseInt(clientId),
+    clientName: client.name,
+    startDate,
+    endDate,
+    sales,
+    receipts
+};
+
                 
                 document.getElementById('reportResult').innerHTML = renderReportResult(
                     client.name, startDate, endDate, sales, receipts
@@ -1166,12 +1168,13 @@
             
             try {
                 // Проверяем наличие сохраненных данных отчета
-                if (!state.reportData) {
-                    alert('❌ Сначала сформируйте акт сверки, нажав кнопку "Сформировать"');
-                    return;
-                }
-                
-                const { clientId, startDate, endDate } = state.reportData;
+                if (!REPORT_DATA) {
+    alert('❌ Сначала сформируйте акт сверки, нажав кнопку "Сформировать"');
+    return;
+}
+
+const { clientId, startDate, endDate } = REPORT_DATA;
+
                 
                 console.log('📋 Sending PDF request:', { clientId, startDate, endDate });
                 
