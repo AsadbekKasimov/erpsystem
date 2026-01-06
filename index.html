@@ -407,13 +407,17 @@
                 <div class="card">
                     <h3 class="card-title">${t('reconciliationAct')}</h3>
                     <form onsubmit="generateReport(event)">
-                        <div class="form-group">
-                            <label class="form-label">${t('client')}</label>
-                            <select class="form-select" name="client" required>
-                                <option value="">${t('selectClient')}</option>
-                                ${state.clients.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
-                            </select>
-                        </div>
+                    ${USER_ROLE === 'admin' ? `
+  <div class="form-group">
+    <label class="form-label">${t('client')}</label>
+    <select class="form-select" name="client" required>
+      <option value="">${t('selectClient')}</option>
+      ${state.clients.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
+    </select>
+  </div>
+` : `
+  <input type="hidden" name="client" value="${CLIENT_ID}">
+`}
                         <div class="form-row">
                             <div class="form-group">
                                 <label class="form-label">${t('startDate')}</label>
