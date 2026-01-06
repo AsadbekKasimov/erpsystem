@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -277,7 +277,8 @@
             salesData: [],
             receiptsData: [],
             productReceiptsData: [],
-            currencyPaymentsData: []
+            currencyPaymentsData: [],
+            selectedClientForView: null
         };
         
         function t(key) { return T[state.lang][key] || key; }
@@ -764,130 +765,136 @@
         }
         
         function renderProductReceipts() {
-            if (!state.selectedClientForView) {
-                return `
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title">${t('productReceipts')}</h3>
-                        </div>
+            return `
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">${t('productReceipts')}</h3>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">${t('client')}</label>
+                        <select class="form-select" onchange="selectClientForProductReceipts(this.value)">
+                            <option value="">${t('selectClient')}</option>
+                            ${state.clients.map(c => `
+                                <option value="${c.id}" ${state.selectedClientForView == c.id ? 'selected' : ''}>${c.name}</option>
+                            `).join('')}
+                        </select>
+                    </div>
+
+                    ${!state.selectedClientForView ? `
                         <div class="empty-state">
                             <div class="empty-icon">📦</div>
                             <p>${t('selectClient')}</p>
                         </div>
-                    </div>
-                `;
-            }
-
-            loadProductReceipts();
-            const client = state.clients.find(c => c.id == state.selectedClientForView);
-
-            return `
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">${t('productReceipts')} - ${client ? client.name : ''}</h3>
-                        <button class="btn btn-primary btn-sm" onclick="showProductReceiptModal()">
-                            + ${t('addProductReceipt')}
-                        </button>
-                    </div>
-
-                    ${state.productReceiptsData.length === 0 ? `
-                        <div class="empty-state">
-                            <div class="empty-icon">📦</div>
-                            <p>${t('noData')}</p>
-                        </div>
                     ` : `
-                        <div class="table-container">
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>${t('date')}</th>
-                                        <th>${t('docNumber')}</th>
-                                        <th>${t('product')}</th>
-                                        <th>${t('quantity')}</th>
-                                        <th>${t('price')}</th>
-                                        <th>${t('amount')}</th>
-                                        <th>${t('note')}</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${state.productReceiptsData.map(r => `
-                                        <tr>
-                                            <td>${new Date(r.date).toLocaleDateString('ru-RU')}</td>
-                                            <td>${r.docNumber}</td>
-                                            <td>${r.product}</td>
-                                            <td>${r.quantity}</td>
-                                            <td>${parseFloat(r.price).toLocaleString('ru-RU')} ${t('sum')}</td>
-                                            <td>${parseFloat(r.amount).toLocaleString('ru-RU')} ${t('sum')}</td>
-                                            <td>${r.note || '-'}</td>
-                                        </tr>
-                                    `).join('')}
-                                </tbody>
-                            </table>
+                        <div style="margin-top: 1rem;">
+                            <button class="btn btn-primary btn-sm" onclick="showProductReceiptModal()">
+                                + ${t('addProductReceipt')}
+                            </button>
                         </div>
+
+                        ${state.productReceiptsData.length === 0 ? `
+                            <div class="empty-state">
+                                <div class="empty-icon">📦</div>
+                                <p>${t('noData')}</p>
+                            </div>
+                        ` : `
+                            <div class="table-container">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>${t('date')}</th>
+                                            <th>${t('docNumber')}</th>
+                                            <th>${t('product')}</th>
+                                            <th>${t('quantity')}</th>
+                                            <th>${t('price')}</th>
+                                            <th>${t('amount')}</th>
+                                            <th>${t('note')}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${state.productReceiptsData.map(r => `
+                                            <tr>
+                                                <td>${new Date(r.date).toLocaleDateString('ru-RU')}</td>
+                                                <td>${r.docNumber}</td>
+                                                <td>${r.product}</td>
+                                                <td>${r.quantity}</td>
+                                                <td>${parseFloat(r.price).toLocaleString('ru-RU')} ${t('sum')}</td>
+                                                <td>${parseFloat(r.amount).toLocaleString('ru-RU')} ${t('sum')}</td>
+                                                <td>${r.note || '-'}</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        `}
                     `}
                 </div>
             `;
         }
 
         function renderCurrencyPayments() {
-            if (!state.selectedClientForView) {
-                return `
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title">${t('currencyPayments')}</h3>
-                        </div>
+            return `
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">${t('currencyPayments')}</h3>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">${t('client')}</label>
+                        <select class="form-select" onchange="selectClientForCurrencyPayments(this.value)">
+                            <option value="">${t('selectClient')}</option>
+                            ${state.clients.map(c => `
+                                <option value="${c.id}" ${state.selectedClientForView == c.id ? 'selected' : ''}>${c.name}</option>
+                            `).join('')}
+                        </select>
+                    </div>
+
+                    ${!state.selectedClientForView ? `
                         <div class="empty-state">
                             <div class="empty-icon">💵</div>
                             <p>${t('selectClient')}</p>
                         </div>
-                    </div>
-                `;
-            }
-
-            loadCurrencyPayments();
-            const client = state.clients.find(c => c.id == state.selectedClientForView);
-
-            return `
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">${t('currencyPayments')} - ${client ? client.name : ''}</h3>
-                        <button class="btn btn-primary btn-sm" onclick="showCurrencyPaymentModal()">
-                            + ${t('addCurrencyPayment')}
-                        </button>
-                    </div>
-
-                    ${state.currencyPaymentsData.length === 0 ? `
-                        <div class="empty-state">
-                            <div class="empty-icon">💵</div>
-                            <p>${t('noData')}</p>
-                        </div>
                     ` : `
-                        <div class="table-container">
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>${t('date')}</th>
-                                        <th>${t('docNumber')}</th>
-                                        <th>${t('amountUSD')}</th>
-                                        <th>${t('exchangeRate')}</th>
-                                        <th>${t('amountUZS')}</th>
-                                        <th>${t('note')}</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${state.currencyPaymentsData.map(p => `
-                                        <tr>
-                                            <td>${new Date(p.date).toLocaleDateString('ru-RU')}</td>
-                                            <td>${p.docNumber}</td>
-                                            <td>$${parseFloat(p.amountUSD).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
-                                            <td>${parseFloat(p.exchangeRate).toLocaleString('ru-RU')}</td>
-                                            <td>${parseFloat(p.amountUZS).toLocaleString('ru-RU')} ${t('sum')}</td>
-                                            <td>${p.note || '-'}</td>
-                                        </tr>
-                                    `).join('')}
-                                </tbody>
-                            </table>
+                        <div style="margin-top: 1rem;">
+                            <button class="btn btn-primary btn-sm" onclick="showCurrencyPaymentModal()">
+                                + ${t('addCurrencyPayment')}
+                            </button>
                         </div>
+
+                        ${state.currencyPaymentsData.length === 0 ? `
+                            <div class="empty-state">
+                                <div class="empty-icon">💵</div>
+                                <p>${t('noData')}</p>
+                            </div>
+                        ` : `
+                            <div class="table-container">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>${t('date')}</th>
+                                            <th>${t('docNumber')}</th>
+                                            <th>${t('amountUSD')}</th>
+                                            <th>${t('exchangeRate')}</th>
+                                            <th>${t('amountUZS')}</th>
+                                            <th>${t('note')}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${state.currencyPaymentsData.map(p => `
+                                            <tr>
+                                                <td>${new Date(p.date).toLocaleDateString('ru-RU')}</td>
+                                                <td>${p.docNumber}</td>
+                                                <td>$${parseFloat(p.amountUSD).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                                                <td>${parseFloat(p.exchangeRate).toLocaleString('ru-RU')}</td>
+                                                <td>${parseFloat(p.amountUZS).toLocaleString('ru-RU')} ${t('sum')}</td>
+                                                <td>${p.note || '-'}</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        `}
                     `}
                 </div>
             `;
@@ -1440,6 +1447,33 @@
             }
         }
         
+        async function selectClientForProductReceipts(clientId) {
+            if (!clientId) {
+                state.selectedClientForView = null;
+                state.productReceiptsData = [];
+                render();
+                return;
+            }
+            
+            state.selectedClientForView = clientId;
+            await loadClientProducts(clientId);
+            await loadProductReceipts();
+            render();
+        }
+
+        async function selectClientForCurrencyPayments(clientId) {
+            if (!clientId) {
+                state.selectedClientForView = null;
+                state.currencyPaymentsData = [];
+                render();
+                return;
+            }
+            
+            state.selectedClientForView = clientId;
+            await loadCurrencyPayments();
+            render();
+        }
+        
         async function loadAndShowClientPrices(clientId) {
             if (!clientId) { document.getElementById('pricesTable').innerHTML = ''; return; }
             await loadClientProducts(clientId);
@@ -1505,6 +1539,8 @@
         window.handleReceiptSubmit = handleReceiptSubmit;
         window.submitProductReceipt = submitProductReceipt;
         window.submitCurrencyPayment = submitCurrencyPayment;
+        window.selectClientForProductReceipts = selectClientForProductReceipts;
+        window.selectClientForCurrencyPayments = selectClientForCurrencyPayments;
         window.loadAndShowClientPrices = loadAndShowClientPrices;
         window.deletePrice = deletePrice;
         window.generateReport = generateReport;
