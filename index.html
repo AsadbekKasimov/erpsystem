@@ -1,3 +1,5 @@
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzMAjblayRGs9bmXvsOWyiLwxDfuxxOlaK1ZjPItTwmZwZrZBhk8WdyCOv-zGVPI11j/exec';
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -109,9 +111,8 @@
 
         let USER_ROLE = null;
         let CLIENT_ID = null;
-        let USER_CHAT_ID = null;
-
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxtTSfxiWM5EUQ5WH4fkQsF6bGVyNtDBlCzQkLVeFRsV-32vRHfh3evuYOf2zsN0Jdj/exec';
+        
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzez5NVzfsIEtih934YKBn1Rj5jiY1x2vSmal_iiqvJDW5va0AFc35ueSmN_TMu4wuJ/exec';
         const isConfigured = SCRIPT_URL !== 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE' && SCRIPT_URL.includes('script.google.com');
         
         const T = {
@@ -1553,8 +1554,6 @@
     // === 🔐 АВТОРИЗАЦИЯ ===
     const tg = window.Telegram?.WebApp;
     const chatId = tg?.initDataUnsafe?.user?.id;
-            USER_CHAT_ID = chatId;
-
 
     if (!chatId) {
         showNoAccess('Откройте приложение из Telegram');
@@ -1650,12 +1649,10 @@ const { clientId, startDate, endDate } = REPORT_DATA;
                     
                     // Вызываем API для генерации и отправки PDF
                     const result = await apiCall('generatePDF', {
-    clientId: clientId,
-    startDate: startDate,
-    endDate: endDate,
-    chatId: USER_CHAT_ID
-});
-
+                        clientId: clientId,
+                        startDate: startDate,
+                        endDate: endDate
+                    });
                     
                     console.log('📥 PDF result:', result);
                     
@@ -1672,13 +1669,10 @@ const { clientId, startDate, endDate } = REPORT_DATA;
                 } else {
                     // Если кнопка не найдена, просто делаем запрос
                     const result = await apiCall('generatePDF', {
-    clientId: clientId,
-    startDate: startDate,
-    endDate: endDate,
-    chatId: USER_CHAT_ID
-});
-
-
+                        clientId: clientId,
+                        startDate: startDate,
+                        endDate: endDate
+                    });
                     
                     if (result.success) {
                         alert('✅ Акт сверки отправлен в Telegram бот!');
